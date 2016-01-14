@@ -294,7 +294,7 @@ class Heatmiser(HeatmiserTransport):
         
         # If mode is 5/2 stop here
         if(dcb[16] == 0):
-            return 0      
+            return info      
             
         if(len(dcb) < 156):
             raise Exception("Size of DCB received from Thermostat is too small")    
