@@ -27,11 +27,11 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
-import socket, time
+import socket, time, sys
 from optparse import OptionParser
 from collections import OrderedDict
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 class CRC16:
     CRC16_LookupHigh = [0x00, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70,
@@ -64,15 +64,15 @@ class CRC16:
 
 class HeatmiserTransport:
     ''' This class handles the Heatmiser transport protocol '''
-    def __init__(self, address, port, pin):
-        self.address = address
+    def __init__(self, host, port, pin):
+        self.host = host
         self.port = port
         self.crc16 = CRC16()
         self.pin = pin
         
     def connect(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((self.address,self.port))
+        self.sock.connect((self.host,self.port))
         self.sock.settimeout(5)
         
     def disconnect(self):
@@ -314,30 +314,39 @@ class Heatmiser(HeatmiserTransport):
             name/keys are supported in this implementation. Use the set_dcb
             method to set any value. '''
         if(name == "switch_differential"):
-            self.set_dcb(16,bytearray([value]))
+            self.set_dcb(6,bytearray([int(value)]))
         elif(name == "frost_protect_temperature"):
-            self.set_dcb(17,bytearray([value]))            
+            self.set_dcb(17,bytearray([int(value)]))            
         elif(name == "set_room_temp"):
-            self.set_dcb(18,bytearray([value]))  
+            self.set_dcb(18,bytearray([int(value)]))  
         elif(name == "floor_max_limit"):
-            self.set_dcb(19,bytearray([value]))  
+            self.set_dcb(19,bytearray([int(value)]))  
         elif(name == "floor_max_limit_enable"):
-            if(value == True):
+            if((value == True) or (value == "True") or (value == "1") or (value == 1)):
                 value = 1
-            else:
+            elif((value == False) or (value == "False") or (value == "0") or (value == 0)):
                 value = 0
+            else:
+                raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
+                                "Valid values: True, 1, False or 0")
             self.set_dcb(20,bytearray([value]))  
         elif(name == "on_off"):
             if(value == "On"):
                 value = 1
-            else:
+            elif(value == "Off"):
                 value = 0
+            else:
+                raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
+                                "Valid values: 'On' or 'Off'")
             self.set_dcb(21,bytearray([value])) 
         elif(name == "key_lock"):
             if(value == "Lock"):
                 value = 1
-            else:
+            elif(value == "Unlock"):
                 value = 0
+            else:
+                raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
+                                "Valid values: 'Lock' or 'Unlock'")
             self.set_dcb(22,bytearray([value]))                            
         else:
             raise Exception("'"+name+"' not supported to be set")
@@ -346,50 +355,68 @@ class Heatmiser(HeatmiserTransport):
 def print_dict(dict, level=""):
     for i in dict.items():
         if(isinstance(i[1],OrderedDict)):
-            print(level+"('"+i[0]+"'")
+            print(level+i[0]+":")
             print_dict(i[1],level + "    ")
-            print(level+")")
         else:
-            print(level+str(i))
+            print(level+str(i[0])+" = "+str(i[1]))
         
 def main():
     # This function shows how to use the Heatmiser class. 
     
-    parser = OptionParser()
-    parser.add_option("-i", "--ip", dest="ip_address", type="string",
-                      help="IP address of HeatMiser Thermostat", default="")
+    parser = OptionParser("Usage: %prog [options] <Heatmiser Thermostat address>")
     parser.add_option("-p", "--port", dest="port", type="int",
                       help="Port of HeatMiser Thermostat (default 8068)", default=8068) 
     parser.add_option("-c", "--pin", dest="pin", type="int",
-                      help="Pin code of HeatMiser Thermostat (default 0000)", default=0) 
+                      help="Pin code of HeatMiser Thermostat (default 0000)", default=0)
+    parser.add_option("-l", "--list", action="store_true", dest="list_all",
+                      help="List all parameters in Thermostat", default=False)
+    parser.add_option("-r", "--read",  dest="parameter",
+                      help="Read one parameter in Thermostat (-r param)", default="")
+    parser.add_option("-w", "--write",  dest="param_value", nargs=2,
+                      help="Write value to parameter in Thermostat (-w param value)")                       
     (options, args) = parser.parse_args()
     
-    # IP address must always be given
-    if(not options.ip_address):
-        parser.error("IP address not given")
+    if (len(args) != 1):
+        parser.error("Wrong number of arguments")
+    
+    host = args[0]
                       
     # Create a new Heatmiser object
-    heatmiser = Heatmiser(options.ip_address,options.port,options.pin)
+    heatmiser = Heatmiser(host,options.port,options.pin)
     
     # Connect to Thermostat
-    heatmiser.connect() 
+    heatmiser.connect()
     
-    # Get all "parameters" from Thermostat as a OrderedDict object
+    # Read all parameters
     info = heatmiser.get_info()
-
-    # Just print them
-    print_dict(info)
     
-    # Read the current temperature setting
-    oldTemp = info["set_room_temp"]
+    # Print all parameters in Thermostat
+    if(options.list_all):
+        print_dict(info)
+        
+    # Print one parameter in Thermostat
+    if(options.parameter != ""):
+        if (options.parameter in info):
+            print(options.parameter + " = " + str(info[options.parameter]))
+        else:
+            sys.stderr.write("Error!\n"+
+                "Parameter '"+options.parameter+"' does not exist\n")
     
-    # Increase the temperature with two degrees Celsius or Fahrenheit
-    heatmiser.set_value("set_room_temp",oldTemp+2)   
-    
-    # Set the temperature back again
-    heatmiser.set_value("set_room_temp",oldTemp)    
-    
-    # Disconnect Thermostat
+    # Write value to one parameter in Thermostat
+    if(options.param_value != None):
+        param = options.param_value[0]
+        value = options.param_value[1]
+        if (param in info):
+            try:
+                heatmiser.set_value(param,value)
+                info2 = heatmiser.get_info()
+                print("Before change: " + param + " = " + str(info[param]))
+                print("After change:  " + param + " = " + str(info2[param]))
+            except Exception as e:
+                sys.stderr.write(e.args[0]+"\n")
+        else:
+            sys.stderr.write("Error!\n"+
+                "Parameter '"+param+"' does not exist\n")
     heatmiser.disconnect()
         
 if __name__ == '__main__':
