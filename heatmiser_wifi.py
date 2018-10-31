@@ -87,8 +87,8 @@ class HeatmiserTransport:
             0x93,              # Operation 0x93=Read, 0xa3=Write
             0x0b,              # Frame length low byte inc CRC (0xb if no data)
             0x00,              # Frame length high byte inc CRC (0 if no data)
-            self.pin & 0xff,   # PIN code low byte
-            self.pin >> 8,     # PIN code high byte
+            int(self.pin) & 0xff,   # PIN code low byte
+            int(self.pin) >> 8,     # PIN code high byte
             dcb_start & 0xff,  # DCB start low byte 
             dcb_start >> 8,    # DCB start high byte 
             dcb_length & 0xff, # DCB length low byte  (0xff for whole DCB)
