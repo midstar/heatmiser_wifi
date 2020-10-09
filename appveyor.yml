@@ -1,0 +1,37 @@
+version: 1.1.1.{build}
+
+environment:
+  PYTHONUNBUFFERED: 1
+  matrix:
+    - PYTHON_VERSION: "27"
+    - PYTHON_VERSION: "36"
+    - PYTHON_VERSION: "37"
+
+init:
+- SET PYTHON=Python%PYTHON_VERSION%
+- SET PATH=C:\%PYTHON%;C:\Users\appveyor\AppData\Roaming\Python\%PYTHON%\Scripts;%PATH%
+- python -V
+
+build: off
+
+install:
+- python -m pip install -U --user pip
+- python -m pip install -U --user tox
+
+test_script:
+- tox -e py%PYTHON_VERSION%
+- python tests/buildtest.py
+
+deploy_script:
+- ps: |
+      if($env:PYTHON_VERSION -eq "37" -And $env:APPVEYOR_REPO_BRANCH -eq "master") {
+        Write-Output "Deploying for this build"
+        python -m pip install -U --user setuptools wheel twine
+        python setup.py sdist bdist_wheel
+        python -m twine upload dist/*
+      } else {
+        Write-Output "No deployment for this build"
+      }
+
+
+
