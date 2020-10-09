@@ -20,7 +20,7 @@ install:
 
 test_script:
 - tox -e py%PYTHON_VERSION%
-- python tests/buildtest.py
+- python buildtest.py
 
 deploy_script:
 - ps: |
