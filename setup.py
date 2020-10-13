@@ -1,3 +1,4 @@
+# coding=utf-8
 from setuptools import setup
 
 try:
@@ -21,6 +22,9 @@ setup(name='heatmiser_wifi',
       keywords = ['heatmiser', 'climate', 'temperature', 'thermostat'], 
       license='MIT',
       packages=['heatmiser_wifi'],
+      entry_points = {
+            'console_scripts': ['heatmiser_wifi=heatmiser_wifi.heatmiser_wifi:main'],
+      },
       zip_safe=False,
       classifiers=[
       'Development Status :: 3 - Alpha',  
