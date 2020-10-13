@@ -1,0 +1,1 @@
+from .heatmiser_wifi import Heatmiser

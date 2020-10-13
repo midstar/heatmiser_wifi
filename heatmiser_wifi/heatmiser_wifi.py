@@ -1,37 +1,26 @@
 #!/usr/bin/env python
+# coding=utf-8
 #
 ###############################################################################
 #   - heatmiser_wifi -
 #
-#   Author: Joel Eriksson (joel.a.eriksson@gmail.com)
+#   Copyright 2020 by Joel Midstjärna (joel.midstjarna@gmail.com)
 #
 #   A Heatmiser WiFi Thermostat communication library. 
 #
 #   Supported Heatmiser Thermostats are DT, DT-E, PRT and PRT-E.
 #
-#   Implementation is based on the HeatMiser V3 System Protocol (v3.9)
+#   It is also possible to run this file as a command line executable.
 #
-#   See main function below for usage.
-#
-#   This program is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU General Public License as published by
-#   the Free Software Foundation, either version 3 of the License, or
-#   (at your option) any later version.
-#
-#   This program is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU General Public License for more details.
-#
-#   You should have received a copy of the GNU General Public License
-#   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#   All rights reserved.
+#   This file is part of the heatmiser_wifi python library and is
+#   released under the "MIT License Agreement". Please see the LICENSE
+#   file that should have been included as part of this package.
 ###############################################################################
 
 import socket, time, sys
 from optparse import OptionParser
 from collections import OrderedDict
-
-__version__ = "1.1.0"
 
 class CRC16:
     CRC16_LookupHigh = [0x00, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70,
@@ -350,8 +339,16 @@ class Heatmiser(HeatmiserTransport):
             self.set_dcb(22,bytearray([value]))                            
         else:
             raise Exception("'"+name+"' not supported to be set")
-            
-        
+
+
+
+
+###############################################################################
+# Below is a command line tool for reading and setting parameters of a
+# Heatmiser Wifi thermostat. It can also be seen as an example on how to use
+# the library.
+
+
 def print_dict(dict, level=""):
     for i in dict.items():
         if(isinstance(i[1],OrderedDict)):
@@ -420,5 +417,4 @@ def main():
     heatmiser.disconnect()
         
 if __name__ == '__main__':
-    main()
-    
+    main()    
