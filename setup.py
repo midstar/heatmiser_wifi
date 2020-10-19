@@ -8,7 +8,7 @@ except:
       long_description = ""
 
 setup(name='heatmiser_wifi',
-      version='1.1.1',
+      version='1.2.0',
       description='Library for communication with Heatmiser Wifi thermostats',
       long_description=long_description,
        long_description_content_type="text/markdown",
