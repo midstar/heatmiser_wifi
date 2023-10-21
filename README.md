@@ -6,6 +6,10 @@ A [Heatmiser](http://www.heatmiser.com/) WiFi Thermostat communication tool and 
 
 Supported Heatmiser Thermostats are DT, DT-E, PRT and PRT-E.
 
+This fork adds support for the PRT-HW WiFi thermostat, and adds the following functionality (for PRT-HW, maybe others):
+* TBA 
+* TBA
+
 The main class of the library is Heatmiser. It supports retrieval of all Thermostat parameters as a dictionary. It also supports setting of some (but not all) of the Thermostat parameters. 
 
 ## Supported platforms
