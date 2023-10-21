@@ -41,4 +41,4 @@ It is also possible to read and write specific parameters. For instructions, wri
     heatmiser_wifi -h
  
 ### Author and license
-This application is written by Joel Midstjärna and is licensed under the MIT License.
+This application is written by Joel Midstjärna and is licensed under the MIT License. This fork is updated by Iain Bullock and licensed under the MIT License.
