@@ -1,4 +1,4 @@
-This repository is forked from the original ((https://github.com/midstar/heatmiser_wifi) and updated for my personal requirements only. Feel free to use it as is or clone and take over the responsibility for public maintenance.
+This repository is forked from the original (https://github.com/midstar/heatmiser_wifi) and updated for my personal requirements only. Feel free to use it as is or clone and take over the responsibility for public maintenance.
 
 # Heatmiser WiFi - python library and tool
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/midstar/heatmiser_wifi?svg=true)](https://ci.appveyor.com/api/projects/status/github/midstar/heatmiser_wifi)
