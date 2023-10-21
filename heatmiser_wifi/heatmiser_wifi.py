@@ -8,7 +8,10 @@
 #
 #   A Heatmiser WiFi Thermostat communication library. 
 #
-#   Supported Heatmiser Thermostats are DT, DT-E, PRT and PRT-E.
+#   Supported Heatmiser Thermostats orignally were DT, DT-E, PRT and PRT-E.
+#
+#   Update by Iain Bullock Feb 2023 to add support for PRTHW, 
+#   and to be able to read and write more things 
 #
 #   It is also possible to run this file as a command line executable.
 #
@@ -21,6 +24,7 @@
 import socket, time, sys
 from optparse import OptionParser
 from collections import OrderedDict
+from datetime import datetime
 
 class CRC16:
     CRC16_LookupHigh = [0x00, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70,
@@ -201,6 +205,8 @@ class Heatmiser(HeatmiserTransport):
             info["model"] = "PRT" 
         elif(dcb[4] == 3):
             info["model"] = "PRT-E"
+        elif(dcb[4] == 4):
+            info["model"] = "PRTHW"
         else:
             info["model"] = "Unknown"
         if(dcb[5] == 0):
@@ -247,7 +253,7 @@ class Heatmiser(HeatmiserTransport):
             info['run_mode'] = "Heating mode (normal mode)"
         else:
             info['run_mode'] = "Frost protection mode"
-        # dcb[24] = away mode (not used)
+        info['away_mode'] = dcb[24]
         info['holiday_return_date_year'] = 2000 + dcb[25]
         info['holiday_return_date_month'] = dcb[26]
         info['holiday_return_date_day_of_month'] = dcb[27]
@@ -271,15 +277,24 @@ class Heatmiser(HeatmiserTransport):
         if(len(dcb) < 72):
             raise Exception("Size of DCB received from Thermostat is too small")        
 
-        info['year'] = 2000 + dcb[41]
-        info['month'] = dcb[42]
-        info['day_of_month'] = dcb[43]
-        info['weekday'] = dcb[44]
-        info['hour'] = dcb[45]
-        info['minute'] = dcb[46]
-        info['second'] = dcb[47]
-        info['weekday_triggers'] = self._get_info_time_triggers(dcb, 48)
-        info['weekend_triggers'] = self._get_info_time_triggers(dcb, 60)
+        # Model PRTHW  has extra fields and adds an offset for the rest
+        if(dcb[4] == 4):
+            info['hot_water'] = dcb[43]
+            offset = 3
+        else:
+            offset = 0
+ 
+        info['year'] = 2000 + dcb[41 + offset]
+        info['month'] = dcb[42 + offset]
+        info['day_of_month'] = dcb[43 + offset]
+        info['weekday'] = dcb[44 + offset]
+        info['hour'] = dcb[45 + offset]
+        info['minute'] = dcb[46 + offset]
+        info['second'] = dcb[47 + offset]
+        info['date_time'] = str(info['year']) + '/' + str(info['month']) + '/' + str(info['day_of_month']) + " " + str(info['hour']) + ':' + str(info['minute']) + ':' + str(info['second'])
+
+        info['weekday_triggers'] = self._get_info_time_triggers(dcb, 48 + offset)
+        info['weekend_triggers'] = self._get_info_time_triggers(dcb, 60 + offset)
         
         # If mode is 5/2 stop here
         if(dcb[16] == 0):
@@ -288,13 +303,14 @@ class Heatmiser(HeatmiserTransport):
         if(len(dcb) < 156):
             raise Exception("Size of DCB received from Thermostat is too small")    
             
-        info['mon_triggers'] = self._get_info_time_triggers(dcb, 72) 
-        info['tue_triggers'] = self._get_info_time_triggers(dcb, 84) 
-        info['wed_triggers'] = self._get_info_time_triggers(dcb, 96)
-        info['thu_triggers'] = self._get_info_time_triggers(dcb, 108)
-        info['fri_triggers'] = self._get_info_time_triggers(dcb, 120) 
-        info['sat_triggers'] = self._get_info_time_triggers(dcb, 132)
-        info['sun_triggers'] = self._get_info_time_triggers(dcb, 144)   
+        # Theses offsets are incorrect. Need to figure out how much of the DCB the hot water times take and make a further adjustment
+        info['mon_triggers'] = self._get_info_time_triggers(dcb, 72 + offset) 
+        info['tue_triggers'] = self._get_info_time_triggers(dcb, 84 + offset) 
+        info['wed_triggers'] = self._get_info_time_triggers(dcb, 96 + offset)
+        info['thu_triggers'] = self._get_info_time_triggers(dcb, 108 + offset)
+        info['fri_triggers'] = self._get_info_time_triggers(dcb, 120 + offset) 
+        info['sat_triggers'] = self._get_info_time_triggers(dcb, 132 + offset)
+        info['sun_triggers'] = self._get_info_time_triggers(dcb, 144 + offset)   
         
         return info
 
@@ -347,6 +363,28 @@ class Heatmiser(HeatmiserTransport):
                                 "Valid values: 'Frost protection mode' or " +
                                 "'Heating mode (normal mode)'")
             self.set_dcb(23,bytearray([value]))                            
+        elif(name == "away_mode"):
+            if(value == "off"):
+                value = 0
+            elif(value == "on"):
+                value = 1
+            else:
+                raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
+                                "Valid values: 'on' or 'off'")
+            self.set_dcb(31,bytearray([value]))
+        elif(name == "hot_water"):
+            if(value == "off"):
+                value = 0
+            elif(value == "on"):
+                value = 1
+            else:
+                raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
+                                "Valid values: 'on' or 'off'")
+            self.set_dcb(42,bytearray([value]))
+        elif(name == "date_time"):
+            # ignore passed value, use system time
+            todays_date = datetime.now()
+            self.set_dcb(43,bytearray([todays_date.hour]))
         else:
             raise Exception("'"+name+"' not supported to be set")
 
