@@ -423,17 +423,11 @@ class Heatmiser(HeatmiserTransport):
         elif(name == "date_time"):
             # ignore passed value, use system time
             todays_date = datetime.now()
-
-        else:
-            raise Exception("'"+name+"' not supported to be set")
-        self.set_dcb(43,bytearray([todays_date.year-2000,todays_date.month,todays_date.day,todays_date.weekday()+1,todays_date.hour,todays_date.minute,todays_date.second]))        
+            self.set_dcb(43,bytearray([todays_date.year-2000,todays_date.month,todays_date.day,todays_date.weekday()+1,todays_date.hour,todays_date.minute,todays_date.second]))        
   
-        # Sorry I'm being lazy from here onwards. Writing to the triggers will only work for the PRT-HW. It could work for the others if the function knew which model was being used, and changed the address accordingly
+        # Sorry I'm being lazy from here onwards. Writing to the triggers will only work for the PRT-HW. It could work for the others if the function knew which model was being used, and changed the DCB address accordingly
         elif(name == "mon_triggers"):
-
-        else:
-            raise Exception("'"+name+"' not supported to be set")
-        self.set_dcb(103,bytearray([4,30,20]))
+            self.set_dcb(103,bytearray([4,30,20]))
         
 ###############################################################################
 # Below is a command line tool for reading and setting parameters of a
