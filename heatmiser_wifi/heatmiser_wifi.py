@@ -162,7 +162,8 @@ class HeatmiserTransport:
     def set_dcb(self, dcb_address, dcb_data):
         self._send_write_request(dcb_address, dcb_data)
         # Just get an ACK from the Thermostat (don't use the result)
-        dcb = self._receive_dcb()
+        # Actually don't bother waiting for the ACK. Reduce comms with thermostat to potentially reduce errors
+        # dcb = self._receive_dcb()
 
 class Heatmiser(HeatmiserTransport):
     ''' This class handles the Heatmiser application (DCB) protocol '''
