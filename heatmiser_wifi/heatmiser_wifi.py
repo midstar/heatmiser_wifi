@@ -427,9 +427,8 @@ class Heatmiser(HeatmiserTransport):
         else:
             raise Exception("'"+name+"' not supported to be set")
         
-        # Sorry I'm being lazy from here onwards. Writing to the triggers will only work for the PRT-HW. It could work for the others if the function knew which model was being used, and changed the address accordingly
         elif(name == "mon_triggers"):
-
+        # Sorry I'm being lazy from here onwards. Writing to the triggers will only work for the PRT-HW. It could work for the others if the function knew which model was being used, and changed the address accordingly
             self.set_dcb(103,bytearray([4,30,20]))
         else:
             raise Exception("'"+name+"' not supported to be set")
