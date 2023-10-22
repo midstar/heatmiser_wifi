@@ -426,9 +426,10 @@ class Heatmiser(HeatmiserTransport):
             self.set_dcb(43,bytearray([todays_date.year-2000,todays_date.month,todays_date.day,todays_date.weekday()+1,todays_date.hour,todays_date.minute,todays_date.second]))
         else:
             raise Exception("'"+name+"' not supported to be set")
-
+        
         # Sorry I'm being lazy from here onwards. Writing to the triggers will only work for the PRT-HW. It could work for the others if the function knew which model was being used, and changed the address accordingly
         elif(name == "mon_triggers"):
+
             self.set_dcb(103,bytearray([4,30,20]))
         else:
             raise Exception("'"+name+"' not supported to be set")
