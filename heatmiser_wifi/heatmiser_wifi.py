@@ -422,7 +422,7 @@ class Heatmiser(HeatmiserTransport):
         elif(name == "date_time"):
             # ignore passed value, use system time
             todays_date = datetime.now()
-            self.set_dcb(43,bytearray([23,10,20,5,15,todays_date.minute,0]))
+            self.set_dcb(43,bytearray([todays_date.year-2000,todays_date.month,todays_date.day,todays_date.weekday+1,todays_date.hour,todays_date.minute,todays_date.second]))
         else:
             raise Exception("'"+name+"' not supported to be set")
 
