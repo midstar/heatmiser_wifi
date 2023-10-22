@@ -66,7 +66,7 @@ class HeatmiserTransport:
     def connect(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((self.host,self.port))
-        self.sock.settimeout(10)
+        self.sock.settimeout(5)
         
     def disconnect(self):
         self.sock.close()
@@ -422,7 +422,7 @@ class Heatmiser(HeatmiserTransport):
         elif(name == "date_time"):
             # ignore passed value, use system time
             todays_date = datetime.now()
-            self.set_dcb(49,bytearray([todays_date.minute]))
+            self.set_dcb(43,bytearray(23,10,20,5,15,[todays_date.minute],0))
         else:
             raise Exception("'"+name+"' not supported to be set")
 
