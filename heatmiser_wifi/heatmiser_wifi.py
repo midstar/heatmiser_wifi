@@ -277,25 +277,32 @@ class Heatmiser(HeatmiserTransport):
         if(len(dcb) < 72):
             raise Exception("Size of DCB received from Thermostat is too small")        
 
-        # Model PRTHW  has extra fields and adds an offset for the rest
-        if(dcb[4] == 4):
-            info['hot_water'] = dcb[43]
-            offset = 3
+        # Model PRTHW has extra fields and offsets for the rest
+        if(dcb[4] != 4):
+            info['year'] = 2000 + dcb[41]
+            info['month'] = dcb[42]
+            info['day_of_month'] = dcb[43]
+            info['weekday'] = dcb[44]
+            info['hour'] = dcb[45]
+            info['minute'] = dcb[46]
+            info['second'] = dcb[47]
+            info['date_time'] = str(info['year']) + '/' + str(info['month']) + '/' + str(info['day_of_month']) + " " + str(info['hour']) + ':' + str(info['minute']) + ':' + str(info['second'])
+            info['weekday_triggers'] = self._get_info_time_triggers(dcb, 48)
+            info['weekend_triggers'] = self._get_info_time_triggers(dcb, 60)
         else:
-            offset = 0
- 
-        info['year'] = 2000 + dcb[41 + offset]
-        info['month'] = dcb[42 + offset]
-        info['day_of_month'] = dcb[43 + offset]
-        info['weekday'] = dcb[44 + offset]
-        info['hour'] = dcb[45 + offset]
-        info['minute'] = dcb[46 + offset]
-        info['second'] = dcb[47 + offset]
-        info['date_time'] = str(info['year']) + '/' + str(info['month']) + '/' + str(info['day_of_month']) + " " + str(info['hour']) + ':' + str(info['minute']) + ':' + str(info['second'])
-
-        info['weekday_triggers'] = self._get_info_time_triggers(dcb, 48 + offset)
-        info['weekend_triggers'] = self._get_info_time_triggers(dcb, 60 + offset)
-        
+            info['boost'] = ((dcb[41] << 8) | dcb[42])
+            info['hot_water_state'] = (dcb[43] == 1)
+            info['year'] = 2000 + dcb[44]
+            info['month'] = dcb[45]
+            info['day_of_month'] = dcb[46]
+            info['weekday'] = dcb[47]
+            info['hour'] = dcb[48]
+            info['minute'] = dcb[49]
+            info['second'] = dcb[50]
+            info['date_time'] = str(info['year']) + '/' + str(info['month']) + '/' + str(info['day_of_month']) + " " + str(info['hour']) + ':' + str(info['minute']) + ':' + str(info['second'])
+            info['weekday_triggers'] = self._get_info_time_triggers(dcb, 51)
+            info['weekend_triggers'] = self._get_info_time_triggers(dcb, 63)            
+         
         # If mode is 5/2 stop here
         if(dcb[16] == 0):
             return info      
@@ -303,15 +310,32 @@ class Heatmiser(HeatmiserTransport):
         if(len(dcb) < 156):
             raise Exception("Size of DCB received from Thermostat is too small")    
             
-        # Theses offsets are incorrect. Need to figure out how much of the DCB the hot water times take and make a further adjustment
-        info['mon_triggers'] = self._get_info_time_triggers(dcb, 72 + offset) 
-        info['tue_triggers'] = self._get_info_time_triggers(dcb, 84 + offset) 
-        info['wed_triggers'] = self._get_info_time_triggers(dcb, 96 + offset)
-        info['thu_triggers'] = self._get_info_time_triggers(dcb, 108 + offset)
-        info['fri_triggers'] = self._get_info_time_triggers(dcb, 120 + offset) 
-        info['sat_triggers'] = self._get_info_time_triggers(dcb, 132 + offset)
-        info['sun_triggers'] = self._get_info_time_triggers(dcb, 144 + offset)   
-        
+        # Model PRTHW has extra fields and offsets for the rest    
+        if(dcb[4] != 4):
+            info['mon_triggers'] = self._get_info_time_triggers(dcb, 72) 
+            info['tue_triggers'] = self._get_info_time_triggers(dcb, 84) 
+            info['wed_triggers'] = self._get_info_time_triggers(dcb, 96)
+            info['thu_triggers'] = self._get_info_time_triggers(dcb, 108)
+            info['fri_triggers'] = self._get_info_time_triggers(dcb, 120) 
+            info['sat_triggers'] = self._get_info_time_triggers(dcb, 132)
+            info['sun_triggers'] = self._get_info_time_triggers(dcb, 144)  
+        else:
+            info['mon_triggers'] = self._get_info_time_triggers(dcb, 107) 
+            info['tue_triggers'] = self._get_info_time_triggers(dcb, 119) 
+            info['wed_triggers'] = self._get_info_time_triggers(dcb, 131)
+            info['thu_triggers'] = self._get_info_time_triggers(dcb, 143)
+            info['fri_triggers'] = self._get_info_time_triggers(dcb, 155) 
+            info['sat_triggers'] = self._get_info_time_triggers(dcb, 167)
+            info['sun_triggers'] = self._get_info_time_triggers(dcb, 179)  
+            
+            info['mon_hw_triggers'] = self._get_info_time_triggers(dcb, 191) 
+            info['tue_hw_triggers'] = self._get_info_time_triggers(dcb, 207) 
+            info['wed_hw_triggers'] = self._get_info_time_triggers(dcb, 223)
+            info['thu_hw_triggers'] = self._get_info_time_triggers(dcb, 239)
+            info['fri_hw_triggers'] = self._get_info_time_triggers(dcb, 255) 
+            info['sat_hw_triggers'] = self._get_info_time_triggers(dcb, 271)
+            info['sun_hw_triggers'] = self._get_info_time_triggers(dcb, 287) 
+            
         return info
 
     def set_value(self, name, value):
