@@ -405,7 +405,7 @@ class Heatmiser(HeatmiserTransport):
             else:
                 raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
                                 "Valid values: 'on' or 'off'")
-            self.set_dcb(24,bytearray([value]))
+            self.set_dcb(31,bytearray([value]))
             
         elif(name == "hot_water_state"):
             if(value == "off"):
