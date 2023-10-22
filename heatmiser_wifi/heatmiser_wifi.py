@@ -346,12 +346,16 @@ class Heatmiser(HeatmiserTransport):
             method to set any value. '''
         if(name == "switch_differential"):
             self.set_dcb(6,bytearray([int(value)]))
+            
         elif(name == "frost_protect_temperature"):
-            self.set_dcb(17,bytearray([int(value)]))            
+            self.set_dcb(17,bytearray([int(value)]))         
+            
         elif(name == "set_room_temp"):
             self.set_dcb(18,bytearray([int(value)]))  
+            
         elif(name == "floor_max_limit"):
             self.set_dcb(19,bytearray([int(value)]))  
+            
         elif(name == "floor_max_limit_enable"):
             if((value == True) or (value == "True") or (value == "1") or (value == 1)):
                 value = 1
@@ -361,6 +365,7 @@ class Heatmiser(HeatmiserTransport):
                 raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
                                 "Valid values: True, 1, False or 0")
             self.set_dcb(20,bytearray([value]))  
+            
         elif(name == "on_off"):
             if(value == "On"):
                 value = 1
@@ -370,6 +375,7 @@ class Heatmiser(HeatmiserTransport):
                 raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
                                 "Valid values: 'On' or 'Off'")
             self.set_dcb(21,bytearray([value])) 
+            
         elif(name == "key_lock"):
             if(value == "Lock"):
                 value = 1
@@ -379,6 +385,7 @@ class Heatmiser(HeatmiserTransport):
                 raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
                                 "Valid values: 'Lock' or 'Unlock'")
             self.set_dcb(22,bytearray([value]))
+            
         elif(name == "run_mode"):
             if(value == "Frost protection mode"):
                 value = 1
@@ -388,7 +395,8 @@ class Heatmiser(HeatmiserTransport):
                 raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
                                 "Valid values: 'Frost protection mode' or " +
                                 "'Heating mode (normal mode)'")
-            self.set_dcb(23,bytearray([value]))                            
+            self.set_dcb(23,bytearray([value]))    
+            
         elif(name == "away_mode"):
             if(value == "off"):
                 value = 0
@@ -398,6 +406,7 @@ class Heatmiser(HeatmiserTransport):
                 raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
                                 "Valid values: 'on' or 'off'")
             self.set_dcb(24,bytearray([value]))
+            
         elif(name == "hot_water_state"):
             if(value == "off"):
                 value = 2
@@ -408,11 +417,12 @@ class Heatmiser(HeatmiserTransport):
             else:
                 raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
                                 "Valid values: 'on' or 'off'")
-            self.set_dcb(42,bytearray([value]))
+            self.set_dcb(43,bytearray([value]))
+            
         elif(name == "date_time"):
             # ignore passed value, use system time
             todays_date = datetime.now()
-            self.set_dcb(43,bytearray([todays_date.hour]))
+            self.set_dcb(49,bytearray([todays_date.minute]))
         else:
             raise Exception("'"+name+"' not supported to be set")
 
