@@ -66,7 +66,7 @@ class HeatmiserTransport:
     def connect(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((self.host,self.port))
-        self.sock.settimeout(5)
+        self.sock.settimeout(10)
         
     def disconnect(self):
         self.sock.close()
@@ -416,7 +416,7 @@ class Heatmiser(HeatmiserTransport):
                 value = 0
             else:
                 raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
-                                "Valid values: 'on' or 'off'")
+                                "Valid values: 'on', 'off' or 'prog'")
             self.set_dcb(42,bytearray([value]))
             
         elif(name == "date_time"):
