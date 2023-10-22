@@ -206,7 +206,7 @@ class Heatmiser(HeatmiserTransport):
         elif(dcb[4] == 3):
             info["model"] = "PRT-E"
         elif(dcb[4] == 4):
-            info["model"] = "PRTHW"
+            info["model"] = "PRT-HW"
         else:
             info["model"] = "Unknown"
         if(dcb[5] == 0):
@@ -277,7 +277,7 @@ class Heatmiser(HeatmiserTransport):
         if(len(dcb) < 72):
             raise Exception("Size of DCB received from Thermostat is too small")        
 
-        # Model PRTHW has extra fields and offsets for the rest
+        # Model PRT-HW has extra fields and offsets for the rest
         if(dcb[4] != 4):
             info['year'] = 2000 + dcb[41]
             info['month'] = dcb[42]
@@ -312,7 +312,7 @@ class Heatmiser(HeatmiserTransport):
         if(len(dcb) < 156):
             raise Exception("Size of DCB received from Thermostat is too small")    
             
-        # Model PRTHW has extra fields and offsets for the rest    
+        # Model PRT-HW has extra fields and offsets for the rest    
         if(dcb[4] != 4):
             info['mon_triggers'] = self._get_info_time_triggers(dcb, 72) 
             info['tue_triggers'] = self._get_info_time_triggers(dcb, 84) 
@@ -344,6 +344,7 @@ class Heatmiser(HeatmiserTransport):
         ''' Use the same name and value as returned in get_info. Only a few
             name/keys are supported in this implementation. Use the set_dcb
             method to set any value. '''
+        
         if(name == "switch_differential"):
             self.set_dcb(6,bytearray([int(value)]))
             
@@ -426,8 +427,11 @@ class Heatmiser(HeatmiserTransport):
         else:
             raise Exception("'"+name+"' not supported to be set")
 
-
-
+        # Sorry I'm being lazy from here onwards. Writing to the triggers will only work for the PRT-HW. It could work for the others if the function knew which model was being used, and changed the address accordingly
+        elif(name == "mon_triggers"):
+            self.set_dcb(103,bytearray([04,30,20]))
+        else:
+            raise Exception("'"+name+"' not supported to be set")
 
 ###############################################################################
 # Below is a command line tool for reading and setting parameters of a
