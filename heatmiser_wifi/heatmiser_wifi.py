@@ -302,7 +302,9 @@ class Heatmiser(HeatmiserTransport):
             info['date_time'] = str(info['year']) + '/' + str(info['month']) + '/' + str(info['day_of_month']) + " " + str(info['hour']) + ':' + str(info['minute']) + ':' + str(info['second'])
             info['weekday_triggers'] = self._get_info_time_triggers(dcb, 51)
             info['weekend_triggers'] = self._get_info_time_triggers(dcb, 63)            
-         
+            info['weekday_hw_triggers'] = self._get_info_time_triggers(dcb, 75)
+            info['weekend_hw_triggers'] = self._get_info_time_triggers(dcb, 91)     
+            
         # If mode is 5/2 stop here
         if(dcb[16] == 0):
             return info      
