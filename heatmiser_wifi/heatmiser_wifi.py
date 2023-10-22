@@ -417,7 +417,7 @@ class Heatmiser(HeatmiserTransport):
             else:
                 raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
                                 "Valid values: 'on' or 'off'")
-            self.set_dcb(43,bytearray([value]))
+            self.set_dcb(42,bytearray([value]))
             
         elif(name == "date_time"):
             # ignore passed value, use system time
