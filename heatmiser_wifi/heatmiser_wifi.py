@@ -186,7 +186,7 @@ class Heatmiser(HeatmiserTransport):
             info['time'+str(i)] = trigger
         return info
         
-      def _get_info_time_triggers_hw(self, dcb, first_index):
+    def _get_info_time_triggers_hw(self, dcb, first_index):
         index = first_index
         info = OrderedDict()
         # Why is the loop 1 to 5 not 1 to 4?
