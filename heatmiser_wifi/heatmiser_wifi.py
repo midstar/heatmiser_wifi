@@ -219,16 +219,16 @@ class Heatmiser(HeatmiserTransport):
         info["version"] = dcb[3] & 0x7F  
         info["in_floor_limit_state"] = ((dcb[3] & 0x8F) > 0)
         
-        modelNumber = dcb[4]
-        if(modelNumber == 0):
+        self.modelNumber = dcb[4]
+        if(self.modelNumber == 0):
             info["model"] = "DT"
-        elif(modelNumber == 1):
+        elif(self.modelNumber == 1):
             info["model"] = "DT-E"       
-        elif(modelNumber == 2):
+        elif(self.modelNumber == 2):
             info["model"] = "PRT" 
-        elif(modelNumber == 3):
+        elif(self.modelNumber == 3):
             info["model"] = "PRT-E"
-        elif(modelNumber == 4):
+        elif(self.modelNumber == 4):
             info["model"] = "PRT-HW"
         else:
             info["model"] = "Unknown"
@@ -261,8 +261,8 @@ class Heatmiser(HeatmiserTransport):
         info['optimum_start'] = dcb[14]
         info['rate_of_change'] = dcb[15]
 
-        programMode = dcb[16]
-        if(programMode == 0):
+        self.programMode = dcb[16]
+        if(self.programMode == 0):
             info['program_mode'] = "2/5 mode"
         else:
             info['program_mode'] = "7 day mode"
@@ -307,14 +307,14 @@ class Heatmiser(HeatmiserTransport):
         info['heating_is_currently_on'] = (dcb[40] == 1)
         
         # Model DT and DT-E stops here
-        if(modelNumber <= 1):
+        if(self.modelNumber <= 1):
             return info
         
         if(len(dcb) < 72):
             raise Exception("Size of DCB received from Thermostat is too small")        
 
         # Model PRT-HW has extra fields and offsets for the rest
-        if(modelNumber != 4):
+        if(self.modelNumber != 4):
             info['year'] = 2000 + dcb[41]
             info['month'] = dcb[42]
             info['day_of_month'] = dcb[43]
@@ -342,14 +342,14 @@ class Heatmiser(HeatmiserTransport):
             info['weekend_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 91)     
             
         # If mode is 5/2 stop here
-        if(programMode == 0):
+        if(self.programMode == 0):
             return info      
             
         if(len(dcb) < 156):
             raise Exception("Size of DCB received from Thermostat is too small")    
             
         # Model PRT-HW has extra fields and offsets for the rest    
-        if(modelNumber != 4):
+        if(self.modelNumber != 4):
             info['mon_triggers'] = self._get_info_time_triggers(dcb, 72) 
             info['tue_triggers'] = self._get_info_time_triggers(dcb, 84) 
             info['wed_triggers'] = self._get_info_time_triggers(dcb, 96)
@@ -457,7 +457,7 @@ class Heatmiser(HeatmiserTransport):
             self.set_dcb(42,bytearray([value]))
             
         # Model DT and DT-E stops here
-        if(modelNumber <= 1):
+        if(self.modelNumber <= 1):
             return info
             
         if(name == "date_time"):
@@ -468,7 +468,7 @@ class Heatmiser(HeatmiserTransport):
         # To do Weekend / Weekday triggers
         
         # If mode is 5/2 stop here
-        if(programMode == 0):
+        if(self.programMode == 0):
             return info   
                   
         if(name == "mon_triggers"):
@@ -487,7 +487,7 @@ class Heatmiser(HeatmiserTransport):
             self.set_dcb(175,bytearray([value]))            
 
         # If model is not PRT-HW stop here
-        if(modelNumber != 4):
+        if(self.modelNumber != 4):
             return info   
 
         if(name == "mon_hw_triggers"):
