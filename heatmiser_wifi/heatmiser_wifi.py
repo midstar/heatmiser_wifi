@@ -472,38 +472,38 @@ class Heatmiser(HeatmiserTransport):
             return info   
                   
         if(name == "mon_triggers"):
-            self.set_dcb(103,bytearray([value]))
+            self.set_dcb(103,bytearray(value))
         elif(name == "tue_triggers"):
-            self.set_dcb(115,bytearray([value]))
+            self.set_dcb(115,bytearray(value))
         elif(name == "wed_triggers"):
-            self.set_dcb(127,bytearray([value]))
+            self.set_dcb(127,bytearray(value))
         elif(name == "thu_triggers"):
-            self.set_dcb(139,bytearray([value]))            
+            self.set_dcb(139,bytearray(value))            
         elif(name == "fri_triggers"):
-            self.set_dcb(151,bytearray([value]))
+            self.set_dcb(151,bytearray(value))
         elif(name == "sat_triggers"):
-            self.set_dcb(163,bytearray([value]))            
+            self.set_dcb(163,bytearray(value))            
         elif(name == "sun_triggers"):
-            self.set_dcb(175,bytearray([value]))            
+            self.set_dcb(175,bytearray(value))            
 
         # If model is not PRT-HW stop here
         if(self.modelNumber != 4):
             return info   
 
         if(name == "mon_hw_triggers"):
-            self.set_dcb(187,bytearray([value]))
+            self.set_dcb(187,bytearray(value))
         elif(name == "tue_hw_triggers"):
-            self.set_dcb(203,bytearray([value]))
+            self.set_dcb(203,bytearray(value))
         elif(name == "wed_hw_triggers"):
-            self.set_dcb(219,bytearray([value]))
+            self.set_dcb(219,bytearray(value))
         elif(name == "thu_hw_triggers"):
-            self.set_dcb(235,bytearray([value]))            
+            self.set_dcb(235,bytearray(value))            
         elif(name == "fri_hw_triggers"):
-            self.set_dcb(251,bytearray([value]))
+            self.set_dcb(251,bytearray(value))
         elif(name == "sat_hw_triggers"):
-            self.set_dcb(267,bytearray([value]))            
+            self.set_dcb(267,bytearray(value))            
         elif(name == "sun_hw_triggers"):
-            self.set_dcb(283,bytearray([value]))     
+            self.set_dcb(283,bytearray(value))     
 
 ###############################################################################
 # Below is a command line tool for reading and setting parameters of a
@@ -564,7 +564,13 @@ def main():
     # Write value to one parameter in Thermostat
     if(options.param_value != None):
         param = options.param_value[0]
-        value = options.param_value[1]
+
+        if (param in ['weekday_triggers', 'weekend_triggers', 'mon_triggers', 'tue_triggers', 'wed_triggers', 'thu_triggers', 'fri_triggers', 'sat_triggers', 'sun_triggers', 'weekday_hw_triggers', 'weekend_hw_triggers', 'mon_hw_triggers', 'tue_hw_triggers', 'wed_hw_triggers', 'thu_hw_triggers', 'fri_hw_triggers', 'sat_hw_triggers', 'sun_hw_triggers'):
+            # Form array of integers for these
+            value = [int(e) for e in param_value[1].split(",")]
+        else:
+            value = options.param_value[1]
+            
         if (param in info):
             try:
                 heatmiser.set_value(param,value)
