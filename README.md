@@ -24,7 +24,7 @@ Both Windows and Linux has been tested successfully. Mac OS X has not been teste
 ## Installation
 Run 
 
-    python -m pip install heatmiser_wifi
+    python -m pip install git+https://github.com/iainbullock/heatmiser_wifi
 
 This will install both the library and the command line tool.
 
