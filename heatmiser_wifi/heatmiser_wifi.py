@@ -461,16 +461,17 @@ class Heatmiser(HeatmiserTransport):
             return info
             
         if(name == "date_time"):
-            # ignore passed value, use system time
-            todays_date = datetime.now()
+            # the passed value is used as an offset in minutes to apply to the system time
+            todays_date = datetime.now() + datetime.timedelta(minutes=value)
             self.set_dcb(43,bytearray([todays_date.year-2000,todays_date.month,todays_date.day,todays_date.weekday()+1,todays_date.hour,todays_date.minute,todays_date.second]))        
-
+            
         # To do Weekend / Weekday triggers
         
         # If mode is 5/2 stop here
         if(self.programMode == 0):
             return info   
-                  
+
+        # To do: this is only correct for PRT-HW 
         if(name == "mon_triggers"):
             self.set_dcb(103,bytearray(value))
         elif(name == "tue_triggers"):
@@ -565,9 +566,9 @@ def main():
     if(options.param_value != None):
         param = options.param_value[0]
 
-        if (param in ['weekday_triggers', 'weekend_triggers', 'mon_triggers', 'tue_triggers', 'wed_triggers', 'thu_triggers', 'fri_triggers', 'sat_triggers', 'sun_triggers', 'weekday_hw_triggers', 'weekend_hw_triggers', 'mon_hw_triggers', 'tue_hw_triggers', 'wed_hw_triggers', 'thu_hw_triggers', 'fri_hw_triggers', 'sat_hw_triggers', 'sun_hw_triggers'):
+        if (param in ['weekday_triggers', 'weekend_triggers', 'mon_triggers', 'tue_triggers', 'wed_triggers', 'thu_triggers', 'fri_triggers', 'sat_triggers', 'sun_triggers', 'weekday_hw_triggers', 'weekend_hw_triggers', 'mon_hw_triggers', 'tue_hw_triggers', 'wed_hw_triggers', 'thu_hw_triggers', 'fri_hw_triggers', 'sat_hw_triggers', 'sun_hw_triggers']):
             # Form array of integers for these
-            value = [int(e) for e in param_value[1].split(",")]
+            value = [int(e) for e in options.param_value[1].split(",")]
         else:
             value = options.param_value[1]
             
