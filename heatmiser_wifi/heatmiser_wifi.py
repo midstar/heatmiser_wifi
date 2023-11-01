@@ -24,7 +24,7 @@
 import socket, time, sys
 from optparse import OptionParser
 from collections import OrderedDict
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class CRC16:
     CRC16_LookupHigh = [0x00, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70,
@@ -462,16 +462,24 @@ class Heatmiser(HeatmiserTransport):
             
         if(name == "date_time"):
             # the passed value is used as an offset in minutes to apply to the system time
-            todays_date = datetime.now() + datetime.timedelta(minutes=value)
+            todays_date = datetime.now() + timedelta(minutes=int(value))
             self.set_dcb(43,bytearray([todays_date.year-2000,todays_date.month,todays_date.day,todays_date.weekday()+1,todays_date.hour,todays_date.minute,todays_date.second]))        
             
-        # To do Weekend / Weekday triggers
-        
+        if(name == "weekday_triggers"):
+            self.set_dcb(47,bytearray(value))
+        elif(name == "weekday_triggers"):
+            self.set_dcb(59,bytearray(value))
+
+        if(self.modelNumber == 4):
+            if(name == "weekday_hr_triggers"):
+                self.set_dcb(71,bytearray(value))
+            elif(name == "weekday_hr_triggers"):
+                self.set_dcb(87,bytearray(value))
+                    
         # If mode is 5/2 stop here
         if(self.programMode == 0):
             return info   
 
-        # To do: this is only correct for PRT-HW 
         if(name == "mon_triggers"):
             self.set_dcb(103,bytearray(value))
         elif(name == "tue_triggers"):
