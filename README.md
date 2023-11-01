@@ -14,7 +14,7 @@ This fork adds support for the PRT-HW WiFi thermostat, and adds the following fu
 * Setting clock on thermostat with option offset (should work for all models)
 * Note I only have a PRT-HW so can only test functionality on that model
 
-The main class of the library is Heatmiser. It supports retrieval of all Thermostat parameters as a dictionary. It also supports setting of some (but not all) of the Thermostat parameters. 
+The main class of the library is Heatmiser. It supports retrieval of all Thermostat parameters as a dictionary. It also supports setting of most (but not all) of the Thermostat parameters. 
 
 ## Supported platforms
 The application is written in Python and has been successfully tested with Python version 2.7 and 3.4.
