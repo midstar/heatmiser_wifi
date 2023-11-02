@@ -45,9 +45,12 @@ It is also possible to read and write specific parameters. For instructions, wri
     heatmiser_wifi -h
 
 When setting triggers for heating / hot water use comma separated values for the trigger parameters
+
 For heating triggers: Time1Hour,Time1Minute,Time1Temp,Time2Hour,Time2Minute,Time2Temp,Time3Hour,Time3Minute,Time3Temp,Time4Hour,Time4Minute,Time4Temp
+
 For hot water triggers: Time1OnHour,Time1OnMinute,Time1OffHour,Time1OffMinute,Time2OnHour,Time2OnMinute,Time2OffHour,Time2OffMinute,Time3OnHour,Time3OnMinute,Time3OffHour,Time3OffMinute,Time4OnHour,Time4OnMinute,Time4OffHour,Time4OffMinute
 Note the thermostat only allows minutes to be either 0 or 30
+
 For example:
     
     heatmiser_wifi -c <pincode> <themostat_ip_address> -w mon_triggers 7,30,20,9,0,5,16,0,22,22,0,5
