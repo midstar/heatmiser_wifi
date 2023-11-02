@@ -49,6 +49,7 @@ When setting triggers for heating / hot water use comma separated values for the
 For heating triggers: Time1Hour,Time1Minute,Time1Temp,Time2Hour,Time2Minute,Time2Temp,Time3Hour,Time3Minute,Time3Temp,Time4Hour,Time4Minute,Time4Temp
 
 For hot water triggers: Time1OnHour,Time1OnMinute,Time1OffHour,Time1OffMinute,Time2OnHour,Time2OnMinute,Time2OffHour,Time2OffMinute,Time3OnHour,Time3OnMinute,Time3OffHour,Time3OffMinute,Time4OnHour,Time4OnMinute,Time4OffHour,Time4OffMinute
+
 Note the thermostat only allows minutes to be either 0 or 30
 
 For example:
@@ -56,10 +57,11 @@ For example:
     heatmiser_wifi -c <pincode> <themostat_ip_address> -w mon_triggers 7,30,20,9,0,5,16,0,22,22,0,5
     heatmiser_wifi -c <pincode> <themostat_ip_address> -w tue_hw_triggers 7,30,8,0,9,0,9,30,13,30,14,30,22,0,23,0
 
-When setting date / time, the parameter is an offset which added to the system date before sending to the themrostat. I use this to partuially get round the limitation on trigger minute only being 0 or 30
-For example, this will set the thermostat clock to be 15 mins ahead of the system time:
+When setting date / time, the parameter is an offset which added to the system date before sending to the thermostat. I use this to partially get round the limitation on the trigger minute only being 0 or 30
 
-    heatmiser_wifi -c <pincode> <themostat_ip_address> -w date_time 15
+For example, this will set the thermostat clock to be 15 mins behind the system time:
+
+    heatmiser_wifi -c <pincode> <themostat_ip_address> -w date_time -15
 
 ### Author and license
 This application is written by Joel Midstjärna and is licensed under the MIT License. This fork is updated by Iain Bullock and licensed under the MIT License.
