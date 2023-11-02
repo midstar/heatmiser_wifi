@@ -19,7 +19,7 @@ The main class of the library is Heatmiser. It supports retrieval of all Thermos
 ## Supported platforms
 The application is written in Python and has been successfully tested with Python version 2.7 and 3.4.
 
-Both Windows and Linux has been tested successfully. Mac OS X has not been tested, but should work as well.
+For the orginal version both Windows and Linux has been tested successfully. Mac OS X has not been tested, but should work as well. For this forked version, only Linux has been tested, though I see no reason why it wouldn't work on the other platforms.
 
 ## Installation
 Run 
