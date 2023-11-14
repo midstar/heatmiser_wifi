@@ -287,7 +287,11 @@ class Heatmiser(HeatmiserTransport):
         else:
             info['run_mode'] = "Frost protection mode"
             
-        info['away_mode'] = dcb[24]
+        if(dcb[24] == 0):
+            info['away_mode'] = 'Off'
+        else:
+            info['away_mode'] = 'On'
+            
         info['holiday_return_date_year'] = 2000 + dcb[25]
         info['holiday_return_date_month'] = dcb[26]
         info['holiday_return_date_day_of_month'] = dcb[27]
@@ -327,7 +331,10 @@ class Heatmiser(HeatmiserTransport):
             info['weekend_triggers'] = self._get_info_time_triggers(dcb, 60)
         else:
             info['boost'] = ((dcb[41] << 8) | dcb[42])
-            info['hot_water_state'] = (dcb[43] == 1)
+            if(dcb[43] == 1):
+                info['hot_water_state'] = 'On'
+            else:
+                info['hot_water_state'] = 'Off'
             info['year'] = 2000 + dcb[44]
             info['month'] = dcb[45]
             info['day_of_month'] = dcb[46]
@@ -383,7 +390,17 @@ class Heatmiser(HeatmiserTransport):
         
         if(name == "switch_differential"):
             self.set_dcb(6,bytearray([int(value)]))
-            
+        
+        elif(name == "program_mode"):
+            if(value == '2/5 mode'):
+                value = 0
+            elif(value == '7 day mode')
+                value = 1
+            else
+                raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
+                                "Valid values: '7 day mode' or '2/5 mode'")
+            self.set_dcb(16,bytearray([value]))
+        
         elif(name == "frost_protect_temperature"):
             self.set_dcb(17,bytearray([int(value)]))         
             
@@ -435,25 +452,25 @@ class Heatmiser(HeatmiserTransport):
             self.set_dcb(23,bytearray([value]))    
             
         elif(name == "away_mode"):
-            if(value == "off"):
+            if(value == "Off"):
                 value = 0
-            elif(value == "on"):
+            elif(value == "On"):
                 value = 1
             else:
                 raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
-                                "Valid values: 'on' or 'off'")
+                                "Valid values: 'On' or 'Off'")
             self.set_dcb(31,bytearray([value]))
             
         elif(name == "hot_water_state"):
-            if(value == "off"):
+            if(value == "Off"):
                 value = 2
-            elif(value == "on"):
+            elif(value == "On"):
                 value = 1
-            elif(value == "prog"):
+            elif(value == "Prog"):
                 value = 0
             else:
                 raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
-                                "Valid values: 'on', 'off' or 'prog'")
+                                "Valid values: 'On', 'Off' or 'Prog'")
             self.set_dcb(42,bytearray([value]))
             
         # Model DT and DT-E stops here
