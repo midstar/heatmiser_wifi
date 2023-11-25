@@ -394,7 +394,7 @@ class Heatmiser(HeatmiserTransport):
         elif(name == "program_mode"):
             if(value == '2/5 mode'):
                 value = 0
-            elif(value == '7 day mode')
+            elif(value == '7 day mode'):
                 value = 1
             else
                 raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
