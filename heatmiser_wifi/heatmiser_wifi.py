@@ -396,7 +396,7 @@ class Heatmiser(HeatmiserTransport):
                 value = 0
             elif(value == '7 day mode'):
                 value = 1
-            else
+            else:
                 raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
                                 "Valid values: '7 day mode' or '2/5 mode'")
             self.set_dcb(16,bytearray([value]))
