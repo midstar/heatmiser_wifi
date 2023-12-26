@@ -482,13 +482,13 @@ class Heatmiser(HeatmiserTransport):
             
         if(name == "weekday_triggers"):
             self.set_dcb(47,bytearray(value))
-        elif(name == "weekday_triggers"):
+        elif(name == "weekend_triggers"):
             self.set_dcb(59,bytearray(value))
 
         if(self.modelNumber == 4):
             if(name == "weekday_hr_triggers"):
                 self.set_dcb(71,bytearray(value))
-            elif(name == "weekday_hr_triggers"):
+            elif(name == "weekend_hr_triggers"):
                 self.set_dcb(87,bytearray(value))
                     
         # If mode is 5/2 stop here
