@@ -174,7 +174,6 @@ class Heatmiser(HeatmiserTransport):
     def _get_info_time_triggers(self, dcb, first_index):
         index = first_index
         info = OrderedDict()
-        # Why is the loop 1 to 5 not 1 to 4?
         for i in range (1,5):
             trigger = OrderedDict()
             trigger['hour'] = dcb[index]
@@ -189,7 +188,6 @@ class Heatmiser(HeatmiserTransport):
     def _get_info_time_triggers_hw(self, dcb, first_index):
         index = first_index
         info = OrderedDict()
-        # Why is the loop 1 to 5 not 1 to 4?
         for i in range (1,5):
             trigger = OrderedDict()
             trigger['hour_on'] = dcb[index]
@@ -475,7 +473,7 @@ class Heatmiser(HeatmiserTransport):
             
         # Model DT and DT-E stops here
         if(self.modelNumber <= 1):
-            return info
+            return 
             
         if(name == "date_time"):
             # the passed value is used as an offset in minutes to apply to the system time
@@ -495,7 +493,7 @@ class Heatmiser(HeatmiserTransport):
                     
         # If mode is 5/2 stop here
         if(self.programMode == 0):
-            return info   
+            return 
 
         if(name == "mon_triggers"):
             self.set_dcb(103,bytearray(value))
@@ -514,7 +512,7 @@ class Heatmiser(HeatmiserTransport):
 
         # If model is not PRT-HW stop here
         if(self.modelNumber != 4):
-            return info   
+            return 
 
         if(name == "mon_hw_triggers"):
             self.set_dcb(187,bytearray(value))
