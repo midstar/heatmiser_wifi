@@ -401,11 +401,10 @@ class Heatmiser(HeatmiserTransport):
         #                        "Valid values: '7 day mode' or '2/5 mode'")
         #    self.set_dcb(16,bytearray([value]))
 
-        # Read only
-        #elif(name == "frost_protect_temperature"):
-        #    self.set_dcb(17,bytearray([int(value)]))         
+        if(name == "frost_protect_temperature"):
+            self.set_dcb(17,bytearray([int(value)]))         
             
-        if(name == "set_room_temp"):
+        elif(name == "set_room_temp"):
             self.set_dcb(18,bytearray([int(value)]))  
 
         elif(name == "floor_max_limit"):
