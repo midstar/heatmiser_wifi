@@ -408,9 +408,8 @@ class Heatmiser(HeatmiserTransport):
         if(name == "set_room_temp"):
             self.set_dcb(18,bytearray([int(value)]))  
 
-        # Read only
-        #elif(name == "floor_max_limit"):
-        #    self.set_dcb(19,bytearray([int(value)]))  
+        elif(name == "floor_max_limit"):
+            self.set_dcb(19,bytearray([int(value)]))  
 
         # Read only
         #elif(name == "floor_max_limit_enable"):
