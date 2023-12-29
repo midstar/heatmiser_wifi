@@ -385,38 +385,43 @@ class Heatmiser(HeatmiserTransport):
         ''' Use the same name and value as returned in get_info. Only a few
             name/keys are supported in this implementation. Use the set_dcb
             method to set any value. '''
-        
-        if(name == "switch_differential"):
-            self.set_dcb(6,bytearray([int(value)]))
-        
-        elif(name == "program_mode"):
-            if(value == '2/5 mode'):
-                value = 0
-            elif(value == '7 day mode'):
-                value = 1
-            else:
-                raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
-                                "Valid values: '7 day mode' or '2/5 mode'")
-            self.set_dcb(16,bytearray([value]))
-        
-        elif(name == "frost_protect_temperature"):
-            self.set_dcb(17,bytearray([int(value)]))         
+
+        # Read only 
+        #if(name == "switch_differential"):
+        #    self.set_dcb(6,bytearray([int(value)]))
+
+        # Read only
+        #elif(name == "program_mode"):
+        #    if(value == '2/5 mode'):
+        #        value = 0
+        #    elif(value == '7 day mode'):
+        #        value = 1
+        #    else:
+        #        raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
+        #                        "Valid values: '7 day mode' or '2/5 mode'")
+        #    self.set_dcb(16,bytearray([value]))
+
+        # Read only
+        #elif(name == "frost_protect_temperature"):
+        #    self.set_dcb(17,bytearray([int(value)]))         
             
-        elif(name == "set_room_temp"):
+        if(name == "set_room_temp"):
             self.set_dcb(18,bytearray([int(value)]))  
-            
-        elif(name == "floor_max_limit"):
-            self.set_dcb(19,bytearray([int(value)]))  
-            
-        elif(name == "floor_max_limit_enable"):
-            if((value == True) or (value == "True") or (value == "1") or (value == 1)):
-                value = 1
-            elif((value == False) or (value == "False") or (value == "0") or (value == 0)):
-                value = 0
-            else:
-                raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
-                                "Valid values: True, 1, False or 0")
-            self.set_dcb(20,bytearray([value]))  
+
+        # Read only
+        #elif(name == "floor_max_limit"):
+        #    self.set_dcb(19,bytearray([int(value)]))  
+
+        # Read only
+        #elif(name == "floor_max_limit_enable"):
+        #    if((value == True) or (value == "True") or (value == "1") or (value == 1)):
+        #        value = 1
+        #    elif((value == False) or (value == "False") or (value == "0") or (value == 0)):
+        #        value = 0
+        #    else:
+        #        raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
+        #                        "Valid values: True, 1, False or 0")
+        #    self.set_dcb(20,bytearray([value]))  
             
         elif(name == "on_off"):
             if(value == "On"):
