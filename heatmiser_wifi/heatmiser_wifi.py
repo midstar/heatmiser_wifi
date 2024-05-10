@@ -8,7 +8,10 @@
 #
 #   A Heatmiser WiFi Thermostat communication library. 
 #
-#   Supported Heatmiser Thermostats are DT, DT-E, PRT and PRT-E.
+#   Supported Heatmiser Thermostats orignally were DT, DT-E, PRT and PRT-E.
+#
+#   Update by Iain Bullock Nov 2023 to add support for PRTHW, 
+#   and to be able to read and write more things 
 #
 #   It is also possible to run this file as a command line executable.
 #
@@ -21,6 +24,7 @@
 import socket, time, sys
 from optparse import OptionParser
 from collections import OrderedDict
+from datetime import datetime, timedelta
 
 class CRC16:
     CRC16_LookupHigh = [0x00, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70,
@@ -158,10 +162,14 @@ class HeatmiserTransport:
     def set_dcb(self, dcb_address, dcb_data):
         self._send_write_request(dcb_address, dcb_data)
         # Just get an ACK from the Thermostat (don't use the result)
-        dcb = self._receive_dcb()
+        # Actually don't bother waiting for the ACK. Reduce comms with thermostat to potentially reduce errors
+        # dcb = self._receive_dcb()
 
 class Heatmiser(HeatmiserTransport):
     ''' This class handles the Heatmiser application (DCB) protocol '''
+    
+    modelNumber = -1
+    programMode = -1
     
     def _get_info_time_triggers(self, dcb, first_index):
         index = first_index
@@ -175,9 +183,24 @@ class Heatmiser(HeatmiserTransport):
             trigger['set_temp'] = dcb[index]
             index = index + 1
             info['time'+str(i)] = trigger
-         
+        return info
+        
+    def _get_info_time_triggers_hw(self, dcb, first_index):
+        index = first_index
+        info = OrderedDict()
+        for i in range (1,5):
+            trigger = OrderedDict()
+            trigger['hour_on'] = dcb[index]
+            index = index + 1
+            trigger['minute_on'] = dcb[index]
+            index = index + 1     
+            trigger['hour_off'] = dcb[index]
+            index = index + 1
+            trigger['minute_off'] = dcb[index]
+            index = index + 1            
+            info['time'+str(i)] = trigger
         return info 
-    
+          
     def get_info(self):
         ''' Returns an ordered dictionary with all Thermostat values '''
         dcb = self.get_dcb()
@@ -193,26 +216,33 @@ class Heatmiser(HeatmiserTransport):
             info["vendor_id"] = "OEM"           
         info["version"] = dcb[3] & 0x7F  
         info["in_floor_limit_state"] = ((dcb[3] & 0x8F) > 0)
-        if(dcb[4] == 0):
+        
+        self.modelNumber = dcb[4]
+        if(self.modelNumber == 0):
             info["model"] = "DT"
-        elif(dcb[4] == 1):
+        elif(self.modelNumber == 1):
             info["model"] = "DT-E"       
-        elif(dcb[4] == 2):
+        elif(self.modelNumber == 2):
             info["model"] = "PRT" 
-        elif(dcb[4] == 3):
+        elif(self.modelNumber == 3):
             info["model"] = "PRT-E"
+        elif(self.modelNumber == 4):
+            info["model"] = "PRT-HW"
         else:
             info["model"] = "Unknown"
+            
         if(dcb[5] == 0):
             info["temperature_format"] = "Celsius"
         else:
             info["temperature_format"] = "Fahrenheit"
+            
         info["switch_differential"] = dcb[6]
         info["frost_protection_enable"] = (dcb[7] == 1)
         info["calibration_offset"] = ((dcb[8] << 8) | dcb[9])
         info["output_delay_in_minutes"] = dcb[10]
         # dcb[11] = address (not used)
         info['up_down_key_limit'] = dcb[12]
+        
         if(dcb[13] == 0):
             info['sensor_selection'] = "Built in air sensor only"
         elif(dcb[13] == 1):
@@ -225,29 +255,41 @@ class Heatmiser(HeatmiserTransport):
             info['sensor_selection'] = "Remote air and floor sensor"
         else:
             info['sensor_selection'] = "Unknown"
+            
         info['optimum_start'] = dcb[14]
         info['rate_of_change'] = dcb[15]
-        if(dcb[16] == 0):
+
+        self.programMode = dcb[16]
+        if(self.programMode == 0):
             info['program_mode'] = "2/5 mode"
         else:
             info['program_mode'] = "7 day mode"
+            
         info['frost_protect_temperature'] = dcb[17]
         info['set_room_temp'] = dcb[18]
         info['floor_max_limit'] = dcb[19]
         info['floor_max_limit_enable'] = (dcb[20] == 1)
+        
         if(dcb[21] == 1):
             info['on_off'] = "On"
         else:
             info['on_off'] = "Off"
+            
         if(dcb[22] == 0):
             info['key_lock'] = "Unlock"
         else:
             info['key_lock'] = "Lock"  
+            
         if(dcb[23] == 0):
             info['run_mode'] = "Heating mode (normal mode)"
         else:
             info['run_mode'] = "Frost protection mode"
-        # dcb[24] = away mode (not used)
+            
+        if(dcb[24] == 0):
+            info['away_mode'] = 'Off'
+        else:
+            info['away_mode'] = 'On'
+            
         info['holiday_return_date_year'] = 2000 + dcb[25]
         info['holiday_return_date_month'] = dcb[26]
         info['holiday_return_date_day_of_month'] = dcb[27]
@@ -255,70 +297,130 @@ class Heatmiser(HeatmiserTransport):
         info['holiday_return_date_minute'] = dcb[29]
         info['holiday_enable'] = (dcb[30] == 1)
         info['temp_hold_minutes'] = ((dcb[31] << 8) | dcb[32])
+        
         if((dcb[13] == 1) or (dcb[13] == 4)):
             info['air_temp'] = (float((dcb[34] << 8) | dcb[33]) / 10.0)   
         if((dcb[13] == 2) or (dcb[13] == 3) or (dcb[13] == 4)):
             info['floor_temp'] = (float((dcb[36] << 8) | dcb[35]) / 10.0)               
         if((dcb[13] == 0) or (dcb[13] == 3)):
             info['air_temp'] = (float((dcb[38] << 8) | dcb[37]) / 10.0)
+            
         info['error_code'] = dcb[39]
         info['heating_is_currently_on'] = (dcb[40] == 1)
         
         # Model DT and DT-E stops here
-        if(dcb[4] <= 1):
+        if(self.modelNumber <= 1):
             return info
         
         if(len(dcb) < 72):
             raise Exception("Size of DCB received from Thermostat is too small")        
 
-        info['year'] = 2000 + dcb[41]
-        info['month'] = dcb[42]
-        info['day_of_month'] = dcb[43]
-        info['weekday'] = dcb[44]
-        info['hour'] = dcb[45]
-        info['minute'] = dcb[46]
-        info['second'] = dcb[47]
-        info['weekday_triggers'] = self._get_info_time_triggers(dcb, 48)
-        info['weekend_triggers'] = self._get_info_time_triggers(dcb, 60)
-        
+        # Model PRT-HW has extra fields and offsets for the rest
+        if(self.modelNumber != 4):
+            info['year'] = 2000 + dcb[41]
+            info['month'] = dcb[42]
+            info['day_of_month'] = dcb[43]
+            info['weekday'] = dcb[44]
+            info['hour'] = dcb[45]
+            info['minute'] = dcb[46]
+            info['second'] = dcb[47]
+            info['date_time'] = str(info['year']) + '/' + str(info['month']) + '/' + str(info['day_of_month']) + " " + str(info['hour']) + ':' + str(info['minute']) + ':' + str(info['second'])
+            info['weekday_triggers'] = self._get_info_time_triggers(dcb, 48)
+            info['weekend_triggers'] = self._get_info_time_triggers(dcb, 60)
+        else:
+            info['boost'] = ((dcb[41] << 8) | dcb[42])
+            if(dcb[43] == 1):
+                info['hot_water_state'] = 'On'
+            else:
+                info['hot_water_state'] = 'Off'
+            info['year'] = 2000 + dcb[44]
+            info['month'] = dcb[45]
+            info['day_of_month'] = dcb[46]
+            info['weekday'] = dcb[47]
+            info['hour'] = dcb[48]
+            info['minute'] = dcb[49]
+            info['second'] = dcb[50]
+            info['date_time'] = str(info['year']) + '/' + str(info['month']) + '/' + str(info['day_of_month']) + " " + str(info['hour']) + ':' + str(info['minute']) + ':' + str(info['second'])
+            info['weekday_triggers'] = self._get_info_time_triggers(dcb, 51)
+            info['weekend_triggers'] = self._get_info_time_triggers(dcb, 63)            
+            info['weekday_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 75)
+            info['weekend_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 91)     
+            
         # If mode is 5/2 stop here
-        if(dcb[16] == 0):
+        if(self.programMode == 0):
             return info      
             
         if(len(dcb) < 156):
             raise Exception("Size of DCB received from Thermostat is too small")    
             
-        info['mon_triggers'] = self._get_info_time_triggers(dcb, 72) 
-        info['tue_triggers'] = self._get_info_time_triggers(dcb, 84) 
-        info['wed_triggers'] = self._get_info_time_triggers(dcb, 96)
-        info['thu_triggers'] = self._get_info_time_triggers(dcb, 108)
-        info['fri_triggers'] = self._get_info_time_triggers(dcb, 120) 
-        info['sat_triggers'] = self._get_info_time_triggers(dcb, 132)
-        info['sun_triggers'] = self._get_info_time_triggers(dcb, 144)   
-        
+        # Model PRT-HW has extra fields and offsets for the rest    
+        if(self.modelNumber != 4):
+            info['mon_triggers'] = self._get_info_time_triggers(dcb, 72) 
+            info['tue_triggers'] = self._get_info_time_triggers(dcb, 84) 
+            info['wed_triggers'] = self._get_info_time_triggers(dcb, 96)
+            info['thu_triggers'] = self._get_info_time_triggers(dcb, 108)
+            info['fri_triggers'] = self._get_info_time_triggers(dcb, 120) 
+            info['sat_triggers'] = self._get_info_time_triggers(dcb, 132)
+            info['sun_triggers'] = self._get_info_time_triggers(dcb, 144)  
+        else:
+            info['mon_triggers'] = self._get_info_time_triggers(dcb, 107) 
+            info['tue_triggers'] = self._get_info_time_triggers(dcb, 119) 
+            info['wed_triggers'] = self._get_info_time_triggers(dcb, 131)
+            info['thu_triggers'] = self._get_info_time_triggers(dcb, 143)
+            info['fri_triggers'] = self._get_info_time_triggers(dcb, 155) 
+            info['sat_triggers'] = self._get_info_time_triggers(dcb, 167)
+            info['sun_triggers'] = self._get_info_time_triggers(dcb, 179)  
+            
+            info['mon_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 191) 
+            info['tue_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 207) 
+            info['wed_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 223)
+            info['thu_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 239)
+            info['fri_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 255) 
+            info['sat_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 271)
+            info['sun_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 287) 
+            
         return info
 
     def set_value(self, name, value):
         ''' Use the same name and value as returned in get_info. Only a few
             name/keys are supported in this implementation. Use the set_dcb
             method to set any value. '''
-        if(name == "switch_differential"):
-            self.set_dcb(6,bytearray([int(value)]))
-        elif(name == "frost_protect_temperature"):
-            self.set_dcb(17,bytearray([int(value)]))            
+
+        # Read only 
+        #if(name == "switch_differential"):
+        #    self.set_dcb(6,bytearray([int(value)]))
+
+        # Read only
+        #elif(name == "program_mode"):
+        #    if(value == '2/5 mode'):
+        #        value = 0
+        #    elif(value == '7 day mode'):
+        #        value = 1
+        #    else:
+        #        raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
+        #                        "Valid values: '7 day mode' or '2/5 mode'")
+        #    self.set_dcb(16,bytearray([value]))
+
+        if(name == "frost_protect_temperature"):
+            self.set_dcb(17,bytearray([int(value)]))         
+            
         elif(name == "set_room_temp"):
             self.set_dcb(18,bytearray([int(value)]))  
+
         elif(name == "floor_max_limit"):
             self.set_dcb(19,bytearray([int(value)]))  
-        elif(name == "floor_max_limit_enable"):
-            if((value == True) or (value == "True") or (value == "1") or (value == 1)):
-                value = 1
-            elif((value == False) or (value == "False") or (value == "0") or (value == 0)):
-                value = 0
-            else:
-                raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
-                                "Valid values: True, 1, False or 0")
-            self.set_dcb(20,bytearray([value]))  
+
+        # Read only
+        #elif(name == "floor_max_limit_enable"):
+        #    if((value == True) or (value == "True") or (value == "1") or (value == 1)):
+        #        value = 1
+        #    elif((value == False) or (value == "False") or (value == "0") or (value == 0)):
+        #        value = 0
+        #    else:
+        #        raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
+        #                        "Valid values: True, 1, False or 0")
+        #    self.set_dcb(20,bytearray([value]))  
+            
         elif(name == "on_off"):
             if(value == "On"):
                 value = 1
@@ -328,6 +430,7 @@ class Heatmiser(HeatmiserTransport):
                 raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
                                 "Valid values: 'On' or 'Off'")
             self.set_dcb(21,bytearray([value])) 
+            
         elif(name == "key_lock"):
             if(value == "Lock"):
                 value = 1
@@ -337,6 +440,7 @@ class Heatmiser(HeatmiserTransport):
                 raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
                                 "Valid values: 'Lock' or 'Unlock'")
             self.set_dcb(22,bytearray([value]))
+            
         elif(name == "run_mode"):
             if(value == "Frost protection mode"):
                 value = 1
@@ -346,12 +450,87 @@ class Heatmiser(HeatmiserTransport):
                 raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
                                 "Valid values: 'Frost protection mode' or " +
                                 "'Heating mode (normal mode)'")
-            self.set_dcb(23,bytearray([value]))                            
-        else:
-            raise Exception("'"+name+"' not supported to be set")
+            self.set_dcb(23,bytearray([value]))    
+            
+        elif(name == "away_mode"):
+            if(value == "Off"):
+                value = 0
+            elif(value == "On"):
+                value = 1
+            else:
+                raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
+                                "Valid values: 'On' or 'Off'")
+            self.set_dcb(31,bytearray([value]))
+            
+        elif(name == "hot_water_state"):
+            if(value == "Off"):
+                value = 2
+            elif(value == "On"):
+                value = 1
+            elif(value == "Prog"):
+                value = 0
+            else:
+                raise Exception("'"+name+"' invalid value '"+str(value)+"'\n" +
+                                "Valid values: 'On', 'Off' or 'Prog'")
+            self.set_dcb(42,bytearray([value]))
+            
+        # Model DT and DT-E stops here
+        if(self.modelNumber <= 1):
+            return 
+            
+        if(name == "date_time"):
+            # the passed value is used as an offset in minutes to apply to the system time
+            todays_date = datetime.now() + timedelta(minutes=int(value))
+            self.set_dcb(43,bytearray([todays_date.year-2000,todays_date.month,todays_date.day,todays_date.weekday()+1,todays_date.hour,todays_date.minute,todays_date.second]))        
+            
+        if(name == "weekday_triggers"):
+            self.set_dcb(47,bytearray(value))
+        elif(name == "weekend_triggers"):
+            self.set_dcb(59,bytearray(value))
 
+        if(self.modelNumber == 4):
+            if(name == "weekday_hw_triggers"):
+                self.set_dcb(71,bytearray(value))
+            elif(name == "weekend_hw_triggers"):
+                self.set_dcb(87,bytearray(value))
+                    
+        # If mode is 5/2 stop here
+        if(self.programMode == 0):
+            return 
 
+        if(name == "mon_triggers"):
+            self.set_dcb(103,bytearray(value))
+        elif(name == "tue_triggers"):
+            self.set_dcb(115,bytearray(value))
+        elif(name == "wed_triggers"):
+            self.set_dcb(127,bytearray(value))
+        elif(name == "thu_triggers"):
+            self.set_dcb(139,bytearray(value))            
+        elif(name == "fri_triggers"):
+            self.set_dcb(151,bytearray(value))
+        elif(name == "sat_triggers"):
+            self.set_dcb(163,bytearray(value))            
+        elif(name == "sun_triggers"):
+            self.set_dcb(175,bytearray(value))            
 
+        # If model is not PRT-HW stop here
+        if(self.modelNumber != 4):
+            return 
+
+        if(name == "mon_hw_triggers"):
+            self.set_dcb(187,bytearray(value))
+        elif(name == "tue_hw_triggers"):
+            self.set_dcb(203,bytearray(value))
+        elif(name == "wed_hw_triggers"):
+            self.set_dcb(219,bytearray(value))
+        elif(name == "thu_hw_triggers"):
+            self.set_dcb(235,bytearray(value))            
+        elif(name == "fri_hw_triggers"):
+            self.set_dcb(251,bytearray(value))
+        elif(name == "sat_hw_triggers"):
+            self.set_dcb(267,bytearray(value))            
+        elif(name == "sun_hw_triggers"):
+            self.set_dcb(283,bytearray(value))     
 
 ###############################################################################
 # Below is a command line tool for reading and setting parameters of a
@@ -412,7 +591,13 @@ def main():
     # Write value to one parameter in Thermostat
     if(options.param_value != None):
         param = options.param_value[0]
-        value = options.param_value[1]
+
+        if (param in ['weekday_triggers', 'weekend_triggers', 'mon_triggers', 'tue_triggers', 'wed_triggers', 'thu_triggers', 'fri_triggers', 'sat_triggers', 'sun_triggers', 'weekday_hw_triggers', 'weekend_hw_triggers', 'mon_hw_triggers', 'tue_hw_triggers', 'wed_hw_triggers', 'thu_hw_triggers', 'fri_hw_triggers', 'sat_hw_triggers', 'sun_hw_triggers']):
+            # Form array of integers for these
+            value = [int(e) for e in options.param_value[1].split(",")]
+        else:
+            value = options.param_value[1]
+            
         if (param in info):
             try:
                 heatmiser.set_value(param,value)
