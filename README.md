@@ -1,5 +1,3 @@
-This repository is forked from the original (https://github.com/midstar/heatmiser_wifi) and updated for my personal requirements only. Feel free to use it as is or clone and take over the responsibility for public maintenance.
-
 # Heatmiser WiFi - python library and tool
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/midstar/heatmiser_wifi?svg=true)](https://ci.appveyor.com/api/projects/status/github/midstar/heatmiser_wifi)
 
@@ -64,4 +62,4 @@ For example, this will set the thermostat clock to be 15 mins behind the system 
     heatmiser_wifi -c <pincode> <themostat_ip_address> -w date_time -15
 
 ### Author and license
-This application is written by Joel Midstjärna and is licensed under the MIT License. This fork is updated by Iain Bullock and licensed under the MIT License.
+This application is written by Joel Midstjärna and is licensed under the MIT License. Additional functionality and support for PRT-HW written by Iain Bullock
