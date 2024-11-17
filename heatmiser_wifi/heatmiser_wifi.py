@@ -235,7 +235,9 @@ class Heatmiser(HeatmiserTransport):
             info["model"] = "TM1"			  						 
         else:
             info["model"] = "Unknown"
-        
+
+# All models accept TM1
+
         if(self.modelNumber <= 4):    
             if(dcb[5] == 0):
                 info["temperature_format"] = "Celsius"
@@ -261,16 +263,23 @@ class Heatmiser(HeatmiserTransport):
                 info['sensor_selection'] = "Remote air and floor sensor"
             else:
                 info['sensor_selection'] = "Unknown"
-            
+     
             info['optimum_start'] = dcb[14]
             info['rate_of_change'] = dcb[15]
+            
 # Program mode is 16 for all devices except TM1 which is 6
 # 'pm' is the value of program mode address
-        self.programMode = dcb[16]
+
+        if(self.modelNumber <= 4):    
+            pm = 16
+        else:
+            pm = 6
+        self.programMode = dcb[pm]
         if(self.programMode == 0):
             info['program_mode'] = "2/5 mode"
         else:
             info['program_mode'] = "7 day mode"
+            
         if(self.modelNumber <= 4):  
             info['frost_protect_temperature'] = dcb[17]
             info['set_room_temp'] = dcb[18]
@@ -278,14 +287,21 @@ class Heatmiser(HeatmiserTransport):
             info['floor_max_limit_enable'] = (dcb[20] == 1)
 
 #  On/Off is 21/21 (Write/Read) for all devices except TM1 which is 21/8
-#  Key Lock is 22/22 for all devices except TM1 which is 22/9
+#  Key Lock is 22/22 (Write/Read) for all devices except TM1 which is 22/9
 
-        if(dcb[21] == 1):
+        if(self.modelNumber <= 4):    
+            oo = 21
+            kl = 22
+        else:
+            oo = 8
+            kl = 9
+
+        if(dcb[oo] == 1):
             info['on_off'] = "On"
         else:
             info['on_off'] = "Off"
             
-        if(dcb[22] == 0):
+        if(dcb[kl] == 0):
             info['key_lock'] = "Unlock"
         else:
             info['key_lock'] = "Lock"  
@@ -296,20 +312,29 @@ class Heatmiser(HeatmiserTransport):
             else:
                 info['run_mode'] = "Frost protection mode"
 
-# check away mode for tm1          
-        if(dcb[24] == 0):
+#  Away mode is 31/24 (Write/Read) for all devices except TM1 which 31/7
+#  Holiday return base address is 24/25 (Write/Read) for all devices except TM1 which 24/10
+
+        if(self.modelNumber <= 4):    
+            am = 24
+            hr = 22
+        else:
+            am = 7
+            hr = 9
+
+        if(dcb[am] == 0):
             info['away_mode'] = 'Off'
         else:
             info['away_mode'] = 'On'
             
-        info['holiday_return_date_year'] = 2000 + dcb[25]
-        info['holiday_return_date_month'] = dcb[26]
-        info['holiday_return_date_day_of_month'] = dcb[27]
-        info['holiday_return_date_hour'] = dcb[28]
-        info['holiday_return_date_minute'] = dcb[29]
-        info['holiday_enable'] = (dcb[30] == 1)
+        info['holiday_return_date_year'] = 2000 + dcb[hr]
+        info['holiday_return_date_month'] = dcb[hr + 1]
+        info['holiday_return_date_day_of_month'] = dcb[hr + 2]
+        info['holiday_return_date_hour'] = dcb[hr + 3]
+        info['holiday_return_date_minute'] = dcb[hr + 4]
+        info['holiday_enable'] = (dcb[hr + 5] == 1)
         
-        
+# All models except TM1
         
         if(self.modelNumber <= 4):
             info['temp_hold_minutes'] = ((dcb[31] << 8) | dcb[32])
@@ -322,17 +347,17 @@ class Heatmiser(HeatmiserTransport):
             
             info['error_code'] = dcb[39]
             info['heating_is_currently_on'] = (dcb[40] == 1)
-# ------------------------------------------------------------------------
-
         
         # Model DT and DT-E stops here
         if(self.modelNumber <= 1):
             return info
+            
+# ------------------------------------------------------------------------
         
         if(len(dcb) < 72):
             raise Exception("Size of DCB received from Thermostat is too small")        
 
-# Model PRT-HW has extra fields and offsets for the rest
+# Model PRT-HW & TM1 have extra fields and offsets for the rest - 
         if(self.modelNumber < 4):
             info['year'] = 2000 + dcb[41]
             info['month'] = dcb[42]
@@ -372,18 +397,19 @@ class Heatmiser(HeatmiserTransport):
             info['weekday_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 26)
             info['weekend_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 42)
           
-# ------------------------------------------------------------------------        
-            
+       
         # If mode is 5/2 stop here
         if(self.programMode == 0):
             return info      
-            
+# ------------------------------------------------------------------------ 
+
         if(len(dcb) < 156):
             raise Exception("Size of DCB received from Thermostat is too small")    
             
 # Model PRT-HW has extra fields and offsets from the rest
 # TM1 only has the HW/timer triggers
-   
+
+# Heating timers in 7 day mode   
         if(self.modelNumber < 4):
             info['mon_triggers'] = self._get_info_time_triggers(dcb, 72) 
             info['tue_triggers'] = self._get_info_time_triggers(dcb, 84) 
@@ -401,6 +427,8 @@ class Heatmiser(HeatmiserTransport):
             info['sat_triggers'] = self._get_info_time_triggers(dcb, 167)
             info['sun_triggers'] = self._get_info_time_triggers(dcb, 179)  
             
+# Hot Water timers in 7 day mode
+# PRT-HW       
         if(self.modelNumber >= 4): 
             info['mon_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 191) 
             info['tue_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 207) 
@@ -409,8 +437,20 @@ class Heatmiser(HeatmiserTransport):
             info['fri_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 255) 
             info['sat_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 271)
             info['sun_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 287) 
+# TM1         
+        if(self.modelNumber == 5): 
+            info['mon_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 58) 
+            info['tue_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 74) 
+            info['wed_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 90)
+            info['thu_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 106)
+            info['fri_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 122) 
+            info['sat_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 138)
+            info['sun_hw_triggers'] = self._get_info_time_triggers_hw(dcb, 154) 
             
         return info
+        
+# ------------------------------------------------------------------------ 
+# The Following are the write commands to update the settings 
 
     def set_value(self, name, value):
         ''' Use the same name and value as returned in get_info. Only a few
@@ -567,6 +607,7 @@ class Heatmiser(HeatmiserTransport):
 # Below is a command line tool for reading and setting parameters of a
 # Heatmiser Wifi thermostat. It can also be seen as an example on how to use
 # the library.
+# eg. python heatmiser_wifi.py -c 'pin_code' 'ip_adddress' option -l -w etc.
 
 
 def print_dict(dict, level=""):
