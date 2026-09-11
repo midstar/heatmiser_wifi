@@ -354,7 +354,7 @@ class Heatmiser(HeatmiserTransport):
             
 # ------------------------------------------------------------------------
         
-        if(len(dcb) < 72):
+        if(len(dcb) < 52):
             raise Exception("Size of DCB received from Thermostat is too small")        
 
 # Model PRT-HW & TM1 have extra fields and offsets for the rest - 
