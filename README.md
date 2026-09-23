@@ -4,9 +4,12 @@
 ## Overview
 A [Heatmiser](http://www.heatmiser.com/) WiFi Thermostat communication tool and library for python.
 
-Supported Heatmiser Thermostats are DT, DT-E, PRT and PRT-E.
+Supported Heatmiser Thermostats are DT, DT-E, PRT, PRT-E and PRT-HW 
+Supported Touch Screen Timer TM-1, for setting timers and clock.
 
-This release (v1.3.0) adds support for the PRT-HW WiFi thermostat, and adds the following functionality (for PRT-HW, maybe others):
+This release (1.4.0) adds support for TM-1 timer, to operate in a similar manner to the HW settings on the PRT-HW.
+
+Release (v1.3.0) adds support for the PRT-HW WiFi thermostat, and adds the following functionality (for PRT-HW, maybe others):
 * Setting timers for heating (should work for all models)
 * Setting timers for hot water (for PRT-HW)
 * Setting clock on thermostat with option offset (should work for all models)
@@ -16,7 +19,7 @@ The main class of the library is Heatmiser. It supports retrieval of all Thermos
 ## Supported platforms
 The application is written in Python and has been successfully tested with Python version 2.7 and 3.4.
 
-For versions prior to v1.3.0 both Windows and Linux had been tested successfully. Mac OS X has not been tested, but should work as well. For this release v.1.3.0, only Linux has been tested, though I see no reason why it wouldn't work on the other platforms.
+For versions prior to v1.3.0 both Windows and Linux had been tested successfully. Mac OS X has not been tested, but should work as well. For this release v.1.4.0, only Linux has been tested, though I see no reason why it wouldn't work on the other platforms.
 
 ## Installation
 Run 
@@ -45,7 +48,7 @@ When setting triggers for heating / hot water use comma separated values for the
 
 For heating triggers: Time1Hour,Time1Minute,Time1Temp,Time2Hour,Time2Minute,Time2Temp,Time3Hour,Time3Minute,Time3Temp,Time4Hour,Time4Minute,Time4Temp
 
-For hot water triggers: Time1OnHour,Time1OnMinute,Time1OffHour,Time1OffMinute,Time2OnHour,Time2OnMinute,Time2OffHour,Time2OffMinute,Time3OnHour,Time3OnMinute,Time3OffHour,Time3OffMinute,Time4OnHour,Time4OnMinute,Time4OffHour,Time4OffMinute
+For hot water/Timer triggers: Time1OnHour,Time1OnMinute,Time1OffHour,Time1OffMinute,Time2OnHour,Time2OnMinute,Time2OffHour,Time2OffMinute,Time3OnHour,Time3OnMinute,Time3OffHour,Time3OffMinute,Time4OnHour,Time4OnMinute,Time4OffHour,Time4OffMinute
 
 Note the thermostat only allows minutes to be either 0 or 30
 
