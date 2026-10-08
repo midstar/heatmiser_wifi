@@ -26,8 +26,8 @@ deploy_script:
 - ps: |
       if($env:PYTHON_VERSION -eq "37" -And $env:APPVEYOR_REPO_BRANCH -eq "master") {
         Write-Output "Deploying for this build"
-        python -m pip install -U --user setuptools wheel twine
-        python setup.py sdist bdist_wheel
+        python -m pip install -U --user build twine
+        python -m build
         python -m twine upload dist/*
       } else {
         Write-Output "No deployment for this build"
